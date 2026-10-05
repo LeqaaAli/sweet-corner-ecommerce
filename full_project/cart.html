@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart - SWEET CORNER</title>
+    <link rel="stylesheet" href="homeStyle.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo"> <span>🍓Sweet</span> Corner</div>
+            <ul class="nav-links">
+                <li><a href="home.html">🏠 Home</a></li>
+                <li><a href="contact.html">📞 Contact Us</a></li>
+
+                <li id="guest-nav" class="nav-auth-group">
+                    <a href="signin.html">🔑 Sign In</a>
+                    <a href="signup.html" class="nav-btn-signup">🧁 Sign Up</a>
+                </li>
+                <li id="user-nav" class="nav-user-info" style="display: none;">
+                    <span class="nav-user-name" id="user-display"> User</span>
+                    <button class="nav-btn-logout" id="logout-trigger">🚪 Logout</button>
+                </li>
+
+                <li><a href="cart.html" class="cart-icon">🛒 <span class="cart-count" id="cart-count">0</span></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main class="cart-container">
+        <h2 class="cart-title">🛒 Your Cart</h2>
+        <div id="cart-items"></div>
+        <div class="cart-summary">
+            <div class="cart-total">Total: <span id="total-price">0</span> EGP</div>
+            <a href="order.html" class="order-now-btn">Order Now 🍰</a>
+        </div>
+    </main>
+    <footer>
+        <div class="footer-content"><p>&copy; 2026 Atlas Confections. Have questions? <a href="contact.html">Contact Our Team</a></p></div>
+    </footer>
+    <script>
+        const getCurrentUser = () => JSON.parse(localStorage.getItem('sweetCurrentUser'));
+        const getCartKey = () => getCurrentUser() ? `sweetCart_${getCurrentUser().email}` : 'sweetCart_guest';
+        let cart = JSON.parse(localStorage.getItem(getCartKey())) || [];
+        function saveCart() { localStorage.setItem(getCartKey(), JSON.stringify(cart)); }
+
+        const cartItemsEl = document.getElementById('cart-items');
+        const totalPriceEl = document.getElementById('total-price');
+        const cartCountEl = document.getElementById('cart-count');
+
+        function updateCartBadge() {
+            if (!cartCountEl) return;
+            const totalQty = cart.reduce((sum, i) => sum + (i.qty || 1), 0);
+            cartCountEl.textContent = totalQty;
+            cartCountEl.style.display = totalQty > 0 ? 'flex' : 'none';
+        }
+        function renderCart() {
+            if (cart.length === 0) { cartItemsEl.innerHTML = '<div class="empty-cart"><p>Your cart is empty 🍰</p><a href="home.html">← Browse Desserts</a></div>'; totalPriceEl.textContent = '0'; return; }
+            let total = 0; let html = '';
+            cart.forEach((item, index) => {
+                total += item.price * item.qty;
+                html += `<div class="cart-item"><div class="cart-item-info"><img src="${item.img}" alt="${item.name}" class="cart-item-img"><div><div class="cart-item-name">${item.name}</div><div class="cart-item-price">${item.price} EGP each</div></div></div><div class="cart-actions"><div class="qty-controls"><button class="qty-btn" onclick="changeQty(${index}, -1)">−</button><span class="qty-num">${item.qty}</span><button class="qty-btn" onclick="changeQty(${index}, 1)">+</button></div><button class="remove-btn" onclick="removeItem(${index})">Remove</button></div></div>`;
+            });
+            cartItemsEl.innerHTML = html; totalPriceEl.textContent = total;
+        }
+        function changeQty(index, change) { cart[index].qty += change; if (cart[index].qty <= 0) cart.splice(index, 1); saveCart(); renderCart(); updateCartBadge(); }
+        function removeItem(index) { cart.splice(index, 1); saveCart(); renderCart(); updateCartBadge(); }
+
+        function toggleAuthNav() {
+            const user = getCurrentUser(); const guestNav = document.getElementById('guest-nav'); const userNav = document.getElementById('user-nav'); const nameDisplay = document.getElementById('user-name-display');
+            if (user) { guestNav.style.display = 'none'; userNav.style.display = 'flex'; nameDisplay.textContent = `👤 ${user.name}`; }
+            else { guestNav.style.display = 'flex'; userNav.style.display = 'none'; }
+        }
+        function logout() { localStorage.removeItem('sweetCurrentUser'); window.location.reload(); }
+
+        renderCart(); updateCartBadge(); toggleAuthNav();
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = JSON.parse(localStorage.getItem('sweetCurrentUser'));
+            const guestNav = document.getElementById('guest-nav');
+            const userNav = document.getElementById('user-nav');
+            const userDisplay = document.getElementById('user-display');
+            const logoutBtn = document.getElementById('logout-trigger');
+
+            if (user) {
+                if (guestNav) guestNav.style.display = 'none';
+                if (userNav) {
+                    userNav.style.display = 'flex';
+                    userDisplay.textContent = ` ${user.name}`;
+                }
+            } else {
+                if (guestNav) guestNav.style.display = 'flex';
+                if (userNav) userNav.style.display = 'none';
+            }
+
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    localStorage.removeItem('sweetCurrentUser');
+                    window.location.href = 'home.html';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
